@@ -18,12 +18,13 @@ function verifyToken(token: string) {
 
 // GET /api/pets/[id] - Get specific pet details
 export async function GET(
-  req: NextRequest,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
-) {
+) //  { params }: { params: Promise<{ team: string }> }
+{
   try {
     await dbConnect();
-    
+
     const { id } = await params;
 
     const token = req.headers.get("authorization")?.replace("Bearer ", "");
@@ -92,6 +93,7 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const { id } = await params;
   try {
     await dbConnect();
 
@@ -143,7 +145,7 @@ export async function PUT(
       const existingPet = await Pet.findOne({
         microchipId,
         isActive: true,
-        _id: { $ne: params.id },
+        _id: { $ne: id },
       });
       if (existingPet) {
         return NextResponse.json(
@@ -190,7 +192,7 @@ export async function PUT(
         emergencyContact.relation || pet.emergencyContact.relation;
     }
 
-    const updatedPet = await Pet.findByIdAndUpdate(params.id, updateData, {
+    const updatedPet = await Pet.findByIdAndUpdate(id, updateData, {
       new: true,
     });
 
@@ -210,10 +212,12 @@ export async function PUT(
 // DELETE /api/pets/[id] - Soft delete pet (set isActive to false)
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
+
+    const { id } = await params;
 
     const token = req.headers.get("authorization")?.replace("Bearer ", "");
     if (!token) {
@@ -229,7 +233,7 @@ export async function DELETE(
     }
 
     const pet = await Pet.findOne({
-      _id: params.id,
+      _id: id,
       ownerId: decoded.userId,
       isActive: true,
     });
@@ -244,7 +248,7 @@ export async function DELETE(
     }
 
     // Soft delete - set isActive to false
-    await Pet.findByIdAndUpdate(params.id, { isActive: false });
+    await Pet.findByIdAndUpdate(id, { isActive: false });
 
     return NextResponse.json({
       message: "Pet deleted successfully.",
