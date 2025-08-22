@@ -20,7 +20,7 @@ function verifyToken(token: string) {
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
-) //  { params }: { params: Promise<{ team: string }> }
+)
 {
   try {
     await dbConnect();
@@ -91,7 +91,7 @@ export async function GET(
 // PUT /api/pets/[id] - Update pet information
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
   try {
@@ -111,7 +111,7 @@ export async function PUT(
     }
 
     const pet = await Pet.findOne({
-      _id: params.id,
+      _id: id,
       ownerId: decoded.userId,
       isActive: true,
     });

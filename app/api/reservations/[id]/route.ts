@@ -86,8 +86,9 @@ export async function GET(
 // PUT /api/reservations/[id] - Update reservation status (doctors can update status, users can cancel)
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     await dbConnect();
 
@@ -104,7 +105,7 @@ export async function PUT(
       return NextResponse.json({ error: "Invalid token." }, { status: 401 });
     }
 
-    const reservation = await Reservation.findById(params.id);
+    const reservation = await Reservation.findById(id);
     if (!reservation) {
       return NextResponse.json(
         { error: "Reservation not found." },
