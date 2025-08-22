@@ -19,10 +19,12 @@ function verifyToken(token: string) {
 // GET /api/pets/[id] - Get specific pet details
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
+    
+    const { id } = await params;
 
     const token = req.headers.get("authorization")?.replace("Bearer ", "");
     if (!token) {
@@ -38,7 +40,7 @@ export async function GET(
     }
 
     const pet = await Pet.findOne({
-      _id: params.id,
+      _id: id,
       isActive: true,
     }).populate("ownerId", "profile.firstName profile.lastName email");
 
@@ -58,7 +60,7 @@ export async function GET(
       if (doctor) {
         const hasReservation = await Reservation.findOne({
           doctorId: doctor._id,
-          petId: params.id,
+          petId: id,
           status: { $in: ["confirmed", "in-progress", "completed"] },
         });
         hasAccess = !!hasReservation;

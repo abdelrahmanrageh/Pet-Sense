@@ -18,10 +18,12 @@ function verifyToken(token: string) {
 // GET /api/reservations/[id] - Get specific reservation
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
+    
+    const { id } = await params;
 
     const token = req.headers.get("authorization")?.replace("Bearer ", "");
     if (!token) {
@@ -36,7 +38,7 @@ export async function GET(
       return NextResponse.json({ error: "Invalid token." }, { status: 401 });
     }
 
-    const reservation = await Reservation.findById(params.id)
+    const reservation = await Reservation.findById(id)
       .populate("userId", "profile email")
       .populate("petId")
       .populate({

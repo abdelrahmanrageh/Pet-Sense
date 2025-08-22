@@ -6,12 +6,14 @@ import { Review } from "@/models/Reservation";
 // GET /api/doctors/[id] - Get detailed doctor profile
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await dbConnect();
+    
+    const { id } = await params;
 
-    const doctor = await Doctor.findById(params.id)
+    const doctor = await Doctor.findById(id)
       .populate("userId", "profile location")
       .select("-__v");
 
@@ -20,14 +22,14 @@ export async function GET(
     }
 
     // Get recent reviews
-    const reviews = await Review.find({ doctorId: params.id })
+    const reviews = await Review.find({ doctorId: id })
       .populate("userId", "profile")
       .sort({ createdAt: -1 })
       .limit(10);
 
     // Get rating distribution
     const ratingDistribution = await Review.aggregate([
-      { $match: { doctorId: params.id } },
+      { $match: { doctorId: id } },
       {
         $group: {
           _id: "$rating",
